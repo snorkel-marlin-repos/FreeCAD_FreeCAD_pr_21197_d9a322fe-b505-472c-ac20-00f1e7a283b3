@@ -151,12 +151,12 @@ void PropertyCosmeticEdgeList::Restore(Base::XMLReader &reader)
     reader.clearPartialRestoreObject();
     reader.readElement("CosmeticEdgeList");
     // get the value of my attribute
-    int count = reader.getAttribute<long>("count");
+    int count = reader.getAttributeAsInteger("count");
     std::vector<CosmeticEdge*> values;
     values.reserve(count);
     for (int i = 0; i < count; i++) {
         reader.readElement("CosmeticEdge");
-        const char* TypeName = reader.getAttribute<const char*>("type");
+        const char* TypeName = reader.getAttribute("type");
         CosmeticEdge *newG = static_cast<CosmeticEdge *>(Base::Type::fromName(TypeName).createInstance());
         newG->Restore(reader);
 

@@ -40,13 +40,13 @@ constexpr const char * fcPclVersion = "${PCL_VERSION}";
 constexpr const char * fcPycxxVersion = "${PYCXX_VERSION}";
 
 // PySide
-constexpr const char * fcPysideVersion = "${PySide_VERSION}";
+constexpr const char * fcPysideVersion = "${PySide2_VERSION}";
 
 // PyBind
 constexpr const char * fcPybind11Version = "${pybind11_VERSION}";
 
 // Shiboken
-constexpr const char * fcShibokenVersion = "${Shiboken_VERSION}";
+constexpr const char * fcShibokenVersion = "${Shiboken2_VERSION}";
 
 // vtk
 constexpr const char * fcVtkVersion = "${VTK_VERSION}";

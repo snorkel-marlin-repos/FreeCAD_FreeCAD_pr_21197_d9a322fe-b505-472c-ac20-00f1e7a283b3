@@ -315,25 +315,25 @@ void PropertyContainer::Restore(Base::XMLReader &reader)
 {
     reader.clearPartialRestoreProperty();
     reader.readElement("Properties");
-    int Cnt = reader.getAttribute<long>("Count");
+    int Cnt = reader.getAttributeAsInteger("Count");
 
     int transientCount = 0;
     if(reader.hasAttribute("TransientCount"))
-        transientCount = reader.getAttribute<unsigned long>("TransientCount");
+        transientCount = reader.getAttributeAsUnsigned("TransientCount");
 
     for (int i=0;i<transientCount; ++i) {
         reader.readElement("_Property");
-        Property* prop = getPropertyByName(reader.getAttribute<const char*>("name"));
+        Property* prop = getPropertyByName(reader.getAttribute("name"));
         if(prop)
             FC_TRACE("restore transient '" << prop->getName() << "'");
         if(prop && reader.hasAttribute("status"))
-            prop->setStatusValue(reader.getAttribute<unsigned long>("status"));
+            prop->setStatusValue(reader.getAttributeAsUnsigned("status"));
     }
 
     for (int i=0 ;i<Cnt ;i++) {
         reader.readElement("Property");
-        std::string PropName = reader.getAttribute<const char*>("name");
-        std::string TypeName = reader.getAttribute<const char*>("type");
+        std::string PropName = reader.getAttribute("name");
+        std::string TypeName = reader.getAttribute("type");
         // NOTE: We must also check the type of the current property because a
         // subclass of PropertyContainer might change the type of a property but
         // not its name. In this case we would force to read-in a wrong property
@@ -346,7 +346,7 @@ void PropertyContainer::Restore(Base::XMLReader &reader)
 
             decltype(Property::StatusBits) status;
             if(reader.hasAttribute("status")) {
-                status = decltype(status)(reader.getAttribute<unsigned long>("status"));
+                status = decltype(status)(reader.getAttributeAsUnsigned("status"));
                 if(prop)
                     prop->setStatusValue(status.to_ulong());
             }

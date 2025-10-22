@@ -909,7 +909,7 @@ def saveiv(scene,filename):
     wa=coin.SoWriteAction()
     wa.getOutput().openFile(filename)
     wa.getOutput().setBinary(False)
-    wa.apply(scene)
+    wa.apply(sc)
     wa.getOutput().closeFile()
 
 

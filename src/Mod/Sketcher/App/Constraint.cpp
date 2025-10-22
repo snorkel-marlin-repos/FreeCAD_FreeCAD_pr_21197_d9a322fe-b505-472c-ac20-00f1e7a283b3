@@ -178,19 +178,20 @@ void Constraint::Save(Writer& writer) const
 void Constraint::Restore(XMLReader& reader)
 {
     reader.readElement("Constrain");
-    Name = reader.getAttribute<const char*>("Name");
-    Type = reader.getAttribute<ConstraintType>("Type");
-    Value = reader.getAttribute<double>("Value");
-    First = reader.getAttribute<long>("First");
-    FirstPos = reader.getAttribute<PointPos>("FirstPos");
-    Second = reader.getAttribute<long>("Second");
-    SecondPos = reader.getAttribute<PointPos>("SecondPos");
+    Name = reader.getAttribute("Name");
+    Type = static_cast<ConstraintType>(reader.getAttributeAsInteger("Type"));
+    Value = reader.getAttributeAsFloat("Value");
+    First = reader.getAttributeAsInteger("First");
+    FirstPos = static_cast<PointPos>(reader.getAttributeAsInteger("FirstPos"));
+    Second = reader.getAttributeAsInteger("Second");
+    SecondPos = static_cast<PointPos>(reader.getAttributeAsInteger("SecondPos"));
 
     if (this->Type == InternalAlignment) {
-        AlignmentType = reader.getAttribute<InternalAlignmentType>("InternalAlignmentType");
+        AlignmentType = static_cast<InternalAlignmentType>(
+            reader.getAttributeAsInteger("InternalAlignmentType"));
 
         if (reader.hasAttribute("InternalAlignmentIndex")) {
-            InternalAlignmentIndex = reader.getAttribute<long>("InternalAlignmentIndex");
+            InternalAlignmentIndex = reader.getAttributeAsInteger("InternalAlignmentIndex");
         }
     }
     else {
@@ -199,29 +200,29 @@ void Constraint::Restore(XMLReader& reader)
 
     // read the third geo group if present
     if (reader.hasAttribute("Third")) {
-        Third = reader.getAttribute<long>("Third");
-        ThirdPos = reader.getAttribute<PointPos>("ThirdPos");
+        Third = reader.getAttributeAsInteger("Third");
+        ThirdPos = static_cast<PointPos>(reader.getAttributeAsInteger("ThirdPos"));
     }
 
     // Read the distance a constraint label has been moved
     if (reader.hasAttribute("LabelDistance")) {
-        LabelDistance = (float)reader.getAttribute<double>("LabelDistance");
+        LabelDistance = (float)reader.getAttributeAsFloat("LabelDistance");
     }
 
     if (reader.hasAttribute("LabelPosition")) {
-        LabelPosition = (float)reader.getAttribute<double>("LabelPosition");
+        LabelPosition = (float)reader.getAttributeAsFloat("LabelPosition");
     }
 
     if (reader.hasAttribute("IsDriving")) {
-        isDriving = reader.getAttribute<bool>("IsDriving");
+        isDriving = reader.getAttributeAsInteger("IsDriving") ? true : false;
     }
 
     if (reader.hasAttribute("IsInVirtualSpace")) {
-        isInVirtualSpace = reader.getAttribute<bool>("IsInVirtualSpace");
+        isInVirtualSpace = reader.getAttributeAsInteger("IsInVirtualSpace") ? true : false;
     }
 
     if (reader.hasAttribute("IsActive")) {
-        isActive = reader.getAttribute<bool>("IsActive");
+        isActive = reader.getAttributeAsInteger("IsActive") ? true : false;
     }
 }
 

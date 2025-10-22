@@ -183,7 +183,8 @@ class DraftModification(test_base.DraftTestCaseDoc):
         line2 = Draft.make_line(c, d)
         self.doc.recompute()
 
-        obj = aux.fake_function(line, line2)
+        Draft.trim_objects = aux.fake_function
+        obj = Draft.trim_objects(line, line2)
         self.assertTrue(obj, "'{}' failed".format(operation))
 
     def test_extend(self):
@@ -203,7 +204,8 @@ class DraftModification(test_base.DraftTestCaseDoc):
         line2 = Draft.make_line(c, d)
         self.doc.recompute()
 
-        obj = aux.fake_function(line, line2)
+        Draft.extrude = aux.fake_function
+        obj = Draft.extrude(line, line2)
         self.assertTrue(obj, "'{}' failed".format(operation))
 
     def test_join(self):
@@ -649,7 +651,8 @@ class DraftModification(test_base.DraftTestCaseDoc):
         line = Draft.make_line(a, b)
         direction = Vector(4, 1, 0)
 
-        obj = aux.fake_function(line, direction)
+        Draft.stretch = aux.fake_function
+        obj = Draft.stretch(line, direction)
         self.assertTrue(obj, "'{}' failed".format(operation))
 
     def test_scale_part_feature_arcs(self):

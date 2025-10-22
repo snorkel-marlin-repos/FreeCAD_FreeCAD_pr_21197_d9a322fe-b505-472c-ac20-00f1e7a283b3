@@ -136,20 +136,20 @@ void CosmeticVertex::Restore(Base::XMLReader &reader)
     }
     TechDraw::Vertex::Restore(reader);
     reader.readElement("PermaPoint");
-    permaPoint.x = reader.getAttribute<double>("X");
-    permaPoint.y = reader.getAttribute<double>("Y");
-    permaPoint.z = reader.getAttribute<double>("Z");
+    permaPoint.x = reader.getAttributeAsFloat("X");
+    permaPoint.y = reader.getAttributeAsFloat("Y");
+    permaPoint.z = reader.getAttributeAsFloat("Z");
     reader.readElement("LinkGeom");
-    linkGeom = reader.getAttribute<long>("value");
+    linkGeom = reader.getAttributeAsInteger("value");
     reader.readElement("Color");
-    std::string temp = reader.getAttribute<const char*>("value");
+    std::string temp = reader.getAttribute("value");
     color.fromHexString(temp);
     reader.readElement("Size");
-    size = reader.getAttribute<double>("value");
+    size = reader.getAttributeAsFloat("value");
     reader.readElement("Style");
-    style = reader.getAttribute<long>("value");
+    style = reader.getAttributeAsInteger("value");
     reader.readElement("Visible");
-    visible = reader.getAttribute<bool>("value");
+    visible = (int)reader.getAttributeAsInteger("value")==0?false:true;
     Tag::Restore(reader);
 }
 

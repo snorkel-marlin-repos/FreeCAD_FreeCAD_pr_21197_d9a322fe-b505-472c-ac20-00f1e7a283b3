@@ -68,9 +68,10 @@ class TestObjectCreate(unittest.TestCase):
 
         # count the def make in ObjectsFem module
         # if FEM VTK post processing is disabled, we are not able to create VTK post objects
-        vtk_objects_used = "BUILD_FEM_VTK" in FreeCAD.__cmake__
-        count_defmake = testtools.get_defmake_count(vtk_objects_used)
-
+        if "BUILD_FEM_VTK" in FreeCAD.__cmake__:
+            count_defmake = testtools.get_defmake_count()
+        else:
+            count_defmake = testtools.get_defmake_count(False)
         # TODO if the children are added to the analysis, they show up twice on Tree
         # thus they are not added to the analysis group ATM
         # https://forum.freecad.org/viewtopic.php?t=25283
@@ -78,23 +79,16 @@ class TestObjectCreate(unittest.TestCase):
         # solver children: equations --> 10
         # gmsh mesh children: group, region, boundary layer --> 3
         # result children: mesh result --> 1
+        # post pipeline children: region, scalar, cut, wrap --> 5
         # analysis itself is not in analysis group --> 1
-        # vtk post pipeline children: region, scalar, cut, wrap, glyph --> 5
         # vtk python post objects: glyph --> 1
 
-        subtraction = 15
-        if vtk_objects_used:
-            subtraction += 6
+        subtraction = 20
+        if "BUILD_FEM_VTK_PYTHON" in FreeCAD.__cmake__:
+            subtraction += 1
 
         self.assertEqual(len(doc.Analysis.Group), count_defmake - subtraction)
-
-        # if vtk used, but python API is not available, the vtk python based objects "def make" functions
-        # have been counted, but will not be executed to create objects
-        failed = 0
-        if vtk_objects_used and not ("BUILD_FEM_VTK_PYTHON" in FreeCAD.__cmake__):
-            failed += 1
-
-        self.assertEqual(len(doc.Objects), count_defmake - failed)
+        self.assertEqual(len(doc.Objects), count_defmake)
 
         fcc_print(
             "doc objects count: {}, method: {}".format(

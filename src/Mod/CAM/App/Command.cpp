@@ -351,6 +351,6 @@ void Command::Save(Writer& writer) const
 void Command::Restore(XMLReader& reader)
 {
     reader.readElement("Command");
-    std::string gcode = reader.getAttribute<const char*>("gcode");
+    std::string gcode = reader.getAttribute("gcode");
     setFromGCode(gcode);
 }
