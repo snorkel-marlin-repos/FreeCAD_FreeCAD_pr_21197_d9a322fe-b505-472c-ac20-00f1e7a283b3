@@ -260,25 +260,25 @@ void BaseGeom::Save(Base::Writer &writer) const
 void BaseGeom::Restore(Base::XMLReader &reader)
 {
     reader.readElement("GeomType");
-    geomType = reader.getAttribute<GeomType>("value");
+    geomType = static_cast<GeomType>(reader.getAttributeAsInteger("value"));
     reader.readElement("ExtractType");
-    extractType = reader.getAttribute<ExtractionType>("value");
+    extractType = static_cast<ExtractionType>(reader.getAttributeAsInteger("value"));
     reader.readElement("EdgeClass");
-    classOfEdge = reader.getAttribute<EdgeClass>("value");
+    classOfEdge = static_cast<EdgeClass>(reader.getAttributeAsInteger("value"));
     reader.readElement("HLRVisible");
-    hlrVisible = reader.getAttribute<bool>("value");
+    hlrVisible = reader.getAttributeAsInteger("value") != 0;
     reader.readElement("Reversed");
-    reversed = reader.getAttribute<bool>("value");
+    reversed = reader.getAttributeAsInteger("value") != 0;
     reader.readElement("Ref3D");
-    ref3D = reader.getAttribute<long>("value");
+    ref3D = reader.getAttributeAsInteger("value");
     reader.readElement("Cosmetic");
-    cosmetic = reader.getAttribute<bool>("value");
+    cosmetic = reader.getAttributeAsInteger("value") != 0;
     reader.readElement("Source");
-    m_source = reader.getAttribute<SourceType>("value");
+    m_source = static_cast<SourceType>(reader.getAttributeAsInteger("value"));
     reader.readElement("SourceIndex");
-    m_sourceIndex = reader.getAttribute<long>("value");
+    m_sourceIndex = reader.getAttributeAsInteger("value");
     reader.readElement("CosmeticTag");
-    cosmeticTag = reader.getAttribute<const char*>("value");
+    cosmeticTag = reader.getAttribute("value");
 }
 
 std::vector<Base::Vector3d> BaseGeom::findEndPoints()
@@ -768,12 +768,12 @@ void Circle::Restore(Base::XMLReader &reader)
     // read my Element
     reader.readElement("Center");
     // get the value of my Attribute
-    center.x = reader.getAttribute<double>("X");
-    center.y = reader.getAttribute<double>("Y");
-    center.z = reader.getAttribute<double>("Z");
+    center.x = reader.getAttributeAsFloat("X");
+    center.y = reader.getAttributeAsFloat("Y");
+    center.z = reader.getAttributeAsFloat("Z");
 
     reader.readElement("Radius");
-    radius = reader.getAttribute<double>("value");
+    radius = reader.getAttributeAsFloat("value");
 }
 
 AOC::AOC(const TopoDS_Edge &e) : Circle(e)
@@ -979,26 +979,26 @@ void AOC::Restore(Base::XMLReader &reader)
 {
     Circle::Restore(reader);
     reader.readElement("Start");
-    startPnt.x = reader.getAttribute<double>("X");
-    startPnt.y = reader.getAttribute<double>("Y");
-    startPnt.z = reader.getAttribute<double>("Z");
+    startPnt.x = reader.getAttributeAsFloat("X");
+    startPnt.y = reader.getAttributeAsFloat("Y");
+    startPnt.z = reader.getAttributeAsFloat("Z");
     reader.readElement("End");
-    endPnt.x = reader.getAttribute<double>("X");
-    endPnt.y = reader.getAttribute<double>("Y");
-    endPnt.z = reader.getAttribute<double>("Z");
+    endPnt.x = reader.getAttributeAsFloat("X");
+    endPnt.y = reader.getAttributeAsFloat("Y");
+    endPnt.z = reader.getAttributeAsFloat("Z");
     reader.readElement("Middle");
-    midPnt.x = reader.getAttribute<double>("X");
-    midPnt.y = reader.getAttribute<double>("Y");
-    midPnt.z = reader.getAttribute<double>("Z");
+    midPnt.x = reader.getAttributeAsFloat("X");
+    midPnt.y = reader.getAttributeAsFloat("Y");
+    midPnt.z = reader.getAttributeAsFloat("Z");
 
     reader.readElement("StartAngle");
-    startAngle = reader.getAttribute<double>("value");
+    startAngle = reader.getAttributeAsFloat("value");
     reader.readElement("EndAngle");
-    endAngle = reader.getAttribute<double>("value");
+    endAngle = reader.getAttributeAsFloat("value");
     reader.readElement("Clockwise");
-    cw = reader.getAttribute<bool>("value");
+    cw = (int)reader.getAttributeAsInteger("value")==0?false:true;
     reader.readElement("Large");
-    largeArc = reader.getAttribute<bool>("value");
+    largeArc = (int)reader.getAttributeAsInteger("value")==0?false:true;
 }
 
 //! Generic is a multiline
@@ -1072,14 +1072,14 @@ void Generic::Restore(Base::XMLReader &reader)
 {
     BaseGeom::Restore(reader);
     reader.readElement("Points");
-    int stop = reader.getAttribute<long>("PointsCount");
+    int stop = reader.getAttributeAsInteger("PointsCount");
     int i = 0;
     for ( ; i < stop; i++) {
         reader.readElement("Point");
         Base::Vector3d p;
-        p.x = reader.getAttribute<double>("X");
-        p.y = reader.getAttribute<double>("Y");
-        p.z = reader.getAttribute<double>("Z");
+        p.x = reader.getAttributeAsFloat("X");
+        p.y = reader.getAttributeAsFloat("Y");
+        p.z = reader.getAttributeAsFloat("Z");
         points.push_back(p);
     }
     reader.readEndElement("Points");
@@ -1341,28 +1341,28 @@ void Vertex::Save(Base::Writer &writer) const
 void Vertex::Restore(Base::XMLReader &reader)
 {
     reader.readElement("Point");
-    pnt.x = reader.getAttribute<double>("X");
-    pnt.y = reader.getAttribute<double>("Y");
-    pnt.z = reader.getAttribute<double>("Z");
+    pnt.x = reader.getAttributeAsFloat("X");
+    pnt.y = reader.getAttributeAsFloat("Y");
+    pnt.z = reader.getAttributeAsFloat("Z");
 
     reader.readElement("Extract");
-    extractType = reader.getAttribute<ExtractionType>("value");
+    extractType = static_cast<ExtractionType>(reader.getAttributeAsInteger("value"));
 //    reader.readElement("Visible");
-//    hlrVisible = reader.getAttribute<bool>("value");
+//    hlrVisible = (bool)reader.getAttributeAsInteger("value")==0?false:true;
     reader.readElement("Ref3D");
-    ref3D = reader.getAttribute<long>("value");
+    ref3D = reader.getAttributeAsInteger("value");
     reader.readElement("IsCenter");
-    hlrVisible = reader.getAttribute<bool>("value");
+    hlrVisible = reader.getAttributeAsInteger("value") != 0;
     reader.readElement("Cosmetic");
-    cosmetic = reader.getAttribute<bool>("value");
+    cosmetic = reader.getAttributeAsInteger("value") != 0;
     reader.readElement("CosmeticLink");
-    cosmeticLink = reader.getAttribute<long>("value");
+    cosmeticLink = reader.getAttributeAsInteger("value");
     reader.readElement("CosmeticTag");
-    cosmeticTag = reader.getAttribute<const char*>("value");
+    cosmeticTag = reader.getAttribute("value");
 
     //will restore read to eof looking for "Reference" in old docs??  YES!!
 //    reader.readElement("Reference");
-//    m_reference = reader.getAttribute<bool>("value");
+//    m_reference = (bool)reader.getAttributeAsInteger("value")==0?false:true;
 
     Tag::Restore(reader, "VertexTag");
 

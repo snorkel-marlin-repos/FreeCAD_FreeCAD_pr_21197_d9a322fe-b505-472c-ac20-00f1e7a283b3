@@ -3606,7 +3606,7 @@ void View3DInventorViewer::alignToSelection()
             angle *= -1;
         }
 
-        constexpr auto pi = std::numbers::pi_v<float>;
+        using std::numbers::pi;
 
         // Make angle positive
         if (angle < 0) {

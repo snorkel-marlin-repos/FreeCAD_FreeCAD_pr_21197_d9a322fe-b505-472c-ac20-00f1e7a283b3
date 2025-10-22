@@ -80,9 +80,9 @@ void VisualLayer::Restore(Base::XMLReader& reader)
 {
     reader.readElement("VisualLayer");
 
-    std::string str = reader.getAttribute<const char*>("visible");
+    std::string str = reader.getAttribute("visible");
     visible = (str == "true");
 
-    linePattern = reader.getAttribute<unsigned long>("linePattern");
-    lineWidth = reader.getAttribute<double>("lineWidth");
+    linePattern = reader.getAttributeAsUnsigned("linePattern");
+    lineWidth = reader.getAttributeAsFloat("lineWidth");
 }

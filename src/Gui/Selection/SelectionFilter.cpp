@@ -132,13 +132,15 @@ bool SelectionFilterGatePython::allow(App::Document*, App::DocumentObject* obj, 
 // ----------------------------------------------------------------------------
 
 SelectionFilter::SelectionFilter(const char* filter, App::DocumentObject* container)
-    : container(container)
+    : Ast(nullptr)
+    , container(container)
 {
     setFilter(filter);
 }
 
 SelectionFilter::SelectionFilter(const std::string& filter, App::DocumentObject* container)
-    : container(container)
+    : Ast(nullptr)
+    , container(container)
 {
     setFilter(filter.c_str());
 }

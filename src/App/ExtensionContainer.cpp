@@ -74,15 +74,15 @@ void ExtensionContainer::registerExtension(Base::Type extension, Extension* ext)
     _extensions[extension] = ext;
 }
 
-bool ExtensionContainer::hasExtension(Base::Type type, bool derived) const
+bool ExtensionContainer::hasExtension(Base::Type t, bool derived) const
 {
 
     // check for the exact type
-    bool found = _extensions.find(type) != _extensions.end();
+    bool found = _extensions.find(t) != _extensions.end();
     if (!found && derived) {
         // and for types derived from it, as they can be cast to the extension
         for (const auto& entry : _extensions) {
-            if (entry.first.isDerivedFrom(type)) {
+            if (entry.first.isDerivedFrom(t)) {
                 return true;
             }
         }
@@ -431,12 +431,12 @@ void ExtensionContainer::restoreExtensions(Base::XMLReader& reader)
     }
 
     reader.readElement("Extensions");
-    int Cnt = reader.getAttribute<long>("Count");
+    int Cnt = reader.getAttributeAsInteger("Count");
 
     for (int i = 0; i < Cnt; i++) {
         reader.readElement("Extension");
-        const char* Type = reader.getAttribute<const char*>("type");
-        const char* Name = reader.getAttribute<const char*>("name");
+        const char* Type = reader.getAttribute("type");
+        const char* Name = reader.getAttribute("name");
         try {
             App::Extension* ext = getExtension(Name);
             if (!ext) {

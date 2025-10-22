@@ -73,16 +73,6 @@ class DressupPathBoundary(object):
             ),
         )
         obj.Inside = True
-        obj.addProperty(
-            "App::PropertyBool",
-            "KeepToolDown",
-            "Boundary",
-            QT_TRANSLATE_NOOP(
-                "App::Property",
-                "Keep tool down.",
-            ),
-        )
-        obj.KeepToolDown = False
 
         self.obj = obj
         self.safeHeight = None
@@ -96,16 +86,6 @@ class DressupPathBoundary(object):
 
     def onDocumentRestored(self, obj):
         self.obj = obj
-        if not hasattr(obj, "KeepToolDown"):
-            obj.addProperty(
-                "App::PropertyBool",
-                "KeepToolDown",
-                "Boundary",
-                QT_TRANSLATE_NOOP(
-                    "App::Property",
-                    "Keep tool down.",
-                ),
-            )
 
     def onDelete(self, obj, args):
         if obj.Base:
@@ -121,7 +101,7 @@ class DressupPathBoundary(object):
         return True
 
     def execute(self, obj):
-        pb = PathBoundary(obj.Base, obj.Stock.Shape, obj.Inside, obj.KeepToolDown)
+        pb = PathBoundary(obj.Base, obj.Stock.Shape, obj.Inside)
         obj.Path = pb.execute()
 
 
@@ -135,7 +115,7 @@ class PathBoundary:
     the provided boundary shape.
     """
 
-    def __init__(self, baseOp, boundaryShape, inside=True, keepToolDown=False):
+    def __init__(self, baseOp, boundaryShape, inside=True):
         self.baseOp = baseOp
         self.boundary = boundaryShape
         self.inside = inside
@@ -143,35 +123,22 @@ class PathBoundary:
         self.clearanceHeight = None
         self.strG0ZsafeHeight = None
         self.strG0ZclearanceHeight = None
-        self.keepToolDown = keepToolDown
 
-    def boundaryCommands(
-        self, begin, end, verticalFeed, horizFeed=None, keepToolDown=False, isStartMovements=False
-    ):
+    def boundaryCommands(self, begin, end, verticalFeed):
         Path.Log.track(_vstr(begin), _vstr(end))
         if end and Path.Geom.pointsCoincide(begin, end):
             return []
         cmds = []
-
-        if isStartMovements or not keepToolDown:
-            if begin.z < self.safeHeight:
-                cmds.append(self.strG0ZsafeHeight)
-            if begin.z < self.clearanceHeight:
-                cmds.append(self.strG0ZclearanceHeight)
-            if end:
-                cmds.append(Path.Command("G0", {"X": end.x, "Y": end.y}))
-                if end.z < self.clearanceHeight:
-                    cmds.append(Path.Command("G0", {"Z": max(self.safeHeight, end.z)}))
-                if end.z < self.safeHeight:
-                    cmds.append(Path.Command("G1", {"Z": end.z, "F": verticalFeed}))
-        else:
-            if end:
-                if horizFeed and Path.Geom.isRoughly(begin.z, end.z, 0.001):
-                    speed = horizFeed
-                else:
-                    verticalFeed
-                cmds.append(Path.Command("G1", {"X": end.x, "Y": end.y, "Z": end.z, "F": speed}))
-
+        if begin.z < self.safeHeight:
+            cmds.append(self.strG0ZsafeHeight)
+        if begin.z < self.clearanceHeight:
+            cmds.append(self.strG0ZclearanceHeight)
+        if end:
+            cmds.append(Path.Command("G0", {"X": end.x, "Y": end.y}))
+            if end.z < self.clearanceHeight:
+                cmds.append(Path.Command("G0", {"Z": max(self.safeHeight, end.z)}))
+            if end.z < self.safeHeight:
+                cmds.append(Path.Command("G1", {"Z": end.z, "F": verticalFeed}))
         return cmds
 
     def execute(self):
@@ -202,7 +169,6 @@ class PathBoundary:
         bogusY = True
         commands = [cmd]
         lastExit = None
-        isStartMovements = True
         for cmd in path.Commands[1:]:
             if cmd.Name in Path.Geom.CmdMoveAll:
                 if bogusX:
@@ -254,16 +220,8 @@ class PathBoundary:
                                 if lastExit:
                                     if not (bogusX or bogusY):
                                         commands.extend(
-                                            self.boundaryCommands(
-                                                lastExit,
-                                                pos,
-                                                tc.VertFeed.Value,
-                                                tc.HorizFeed.Value,
-                                                self.keepToolDown,
-                                                isStartMovements,
-                                            )
+                                            self.boundaryCommands(lastExit, pos, tc.VertFeed.Value)
                                         )
-                                        isStartMovements = False
                                     lastExit = None
                                 Path.Log.track(e, flip)
                                 if not (

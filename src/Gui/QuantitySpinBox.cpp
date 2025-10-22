@@ -66,7 +66,6 @@ public:
     QuantitySpinBoxPrivate(QuantitySpinBox *q) :
       validInput(true),
       pendingEmit(false),
-      normalize(true),
       checkRangeInExpression(false),
       unitValue(0),
       maximum(std::numeric_limits<double>::max()),
@@ -256,7 +255,6 @@ public:
     QLocale locale;
     bool validInput;
     bool pendingEmit;
-    bool normalize;
     bool checkRangeInExpression;
     QString validStr;
     Base::Quantity quantity;
@@ -403,21 +401,15 @@ void QuantitySpinBox::resizeEvent(QResizeEvent * event)
 
 void Gui::QuantitySpinBox::keyPressEvent(QKeyEvent* event)
 {
-    Q_D(QuantitySpinBox);
-
     const auto isEnter = event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return;
 
-    if (d->normalize && isEnter && !isNormalized()) {
+    if (isEnter && !isNormalized()) {
         normalize();
         return;
     }
 
     if (!handleKeyEvent(event->text())) {
         QAbstractSpinBox::keyPressEvent(event);
-    }
-
-    if (isEnter) {
-        returnPressed();
     }
 }
 
@@ -502,13 +494,7 @@ bool QuantitySpinBox::isNormalized()
                                               QRegularExpression::CaseInsensitiveOption);
 
     Q_D(const QuantitySpinBox);
-
-    // this check is two level
-    // 1. We consider every string that does not contain operators as normalized
-    // 2. If it does contain operators we check if it differs from normalized input - as some
-    //    operators like - can be allowed even in normalized case.
-    return !d->validStr.contains(operators)
-        || d->validStr.toStdString() == d->quantity.getUserString();
+    return !d->validStr.contains(operators);
 }
 
 void QuantitySpinBox::setValue(const Base::Quantity& value)
@@ -535,18 +521,6 @@ void QuantitySpinBox::setValue(double value)
     quantity.setFormat(currentformat);
 
     setValue(quantity);
-}
-
-bool QuantitySpinBox::autoNormalize() const
-{
-    Q_D(const QuantitySpinBox);
-    return d->normalize;
-}
-
-void QuantitySpinBox::setAutoNormalize(bool normalize)
-{
-    Q_D(QuantitySpinBox);
-    d->normalize = normalize;
 }
 
 bool QuantitySpinBox::hasValidInput() const
@@ -929,13 +903,8 @@ void QuantitySpinBox::focusInEvent(QFocusEvent * event)
 
 void QuantitySpinBox::focusOutEvent(QFocusEvent * event)
 {
-    Q_D(const QuantitySpinBox);
-
     validateInput();
-
-    if (d->normalize) {
-        normalize();
-    }
+    normalize();
 
     QToolTip::hideText();
     QAbstractSpinBox::focusOutEvent(event);

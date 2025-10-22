@@ -99,10 +99,6 @@ public:
 
     const char* whoAmI() const;
 
-    virtual void fixSceneDependencies();
-    std::vector<App::DocumentObject*> claimChildren() const override;
-
-
 private:
     void multiParentPaint(std::vector<TechDraw::DrawPage*>& pages);
     void singleParentPaint(const TechDraw::DrawView* dv);

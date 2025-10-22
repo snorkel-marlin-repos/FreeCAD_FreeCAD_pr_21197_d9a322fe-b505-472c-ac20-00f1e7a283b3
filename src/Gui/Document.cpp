@@ -1652,7 +1652,7 @@ void Document::RestoreDocFile(Base::Reader &reader)
     localreader->FileVersion = reader.getFileVersion();
 
     localreader->readElement("Document");
-    long scheme = localreader->getAttribute<long>("SchemaVersion");
+    long scheme = localreader->getAttributeAsInteger("SchemaVersion");
     localreader->DocumentSchema = scheme;
 
     bool hasExpansion = localreader->hasAttribute("HasExpansion");
@@ -1672,14 +1672,14 @@ void Document::RestoreDocFile(Base::Reader &reader)
     if (scheme == 1) {
         // read the viewproviders itself
         localreader->readElement("ViewProviderData");
-        int Cnt = localreader->getAttribute<long>("Count");
+        int Cnt = localreader->getAttributeAsInteger("Count");
         for (int i=0; i<Cnt; i++) {
             localreader->readElement("ViewProvider");
-            std::string name = localreader->getAttribute<const char*>("name");
+            std::string name = localreader->getAttribute("name");
 
             bool expanded = false;
             if (!hasExpansion && localreader->hasAttribute("expanded")) {
-                const char* attr = localreader->getAttribute<const char*>("expanded");
+                const char* attr = localreader->getAttribute("expanded");
                 if (strcmp(attr,"1") == 0) {
                     expanded = true;
                 }
@@ -1687,7 +1687,7 @@ void Document::RestoreDocFile(Base::Reader &reader)
 
             int treeRank = -1;
             if (localreader->hasAttribute("treeRank")) {
-                treeRank = localreader->getAttribute<int>("treeRank");
+                treeRank = int(localreader->getAttributeAsInteger("treeRank"));
             }
 
             auto pObj = freecad_cast<ViewProviderDocumentObject*>(getViewProviderByName(name.c_str()));
@@ -1709,7 +1709,7 @@ void Document::RestoreDocFile(Base::Reader &reader)
 
         // read camera settings
         localreader->readElement("Camera");
-        const char* ppReturn = localreader->getAttribute<const char*>("settings");
+        const char* ppReturn = localreader->getAttribute("settings");
         cameraSettings.clear();
         if(!Base::Tools::isNullOrEmpty(ppReturn)) {
             saveCameraSettings(ppReturn);
@@ -1902,7 +1902,7 @@ void Document::importObjects(const std::vector<App::DocumentObject*>& obj, Base:
     // We must create an XML parser to read from the input stream
     std::shared_ptr<Base::XMLReader> localreader = std::make_shared<Base::XMLReader>("GuiDocument.xml", reader);
     localreader->readElement("Document");
-    long scheme = localreader->getAttribute<long>("SchemaVersion");
+    long scheme = localreader->getAttributeAsInteger("SchemaVersion");
 
     // At this stage all the document objects and their associated view providers exist.
     // Now we must restore the properties of the view providers only.
@@ -1911,20 +1911,20 @@ void Document::importObjects(const std::vector<App::DocumentObject*>& obj, Base:
     if (scheme == 1) {
         // read the viewproviders itself
         localreader->readElement("ViewProviderData");
-        int Cnt = localreader->getAttribute<long>("Count");
+        int Cnt = localreader->getAttributeAsInteger("Count");
         auto it = obj.begin();
         for (int i=0;i<Cnt&&it!=obj.end();++i,++it) {
             // The stored name usually doesn't match with the current name anymore
             // thus we try to match by type. This should work because the order of
             // objects should not have changed
             localreader->readElement("ViewProvider");
-            std::string name = localreader->getAttribute<const char*>("name");
+            std::string name = localreader->getAttribute("name");
             auto jt = nameMapping.find(name);
             if (jt != nameMapping.end())
                 name = jt->second;
             bool expanded = false;
             if (localreader->hasAttribute("expanded")) {
-                const char* attr = localreader->getAttribute<const char*>("expanded");
+                const char* attr = localreader->getAttribute("expanded");
                 if (strcmp(attr,"1") == 0) {
                     expanded = true;
                 }
@@ -2256,7 +2256,8 @@ bool Document::canClose (bool checkModify, bool checkLink)
 
     bool ok = true;
     if (checkModify && isModified() && !getDocument()->testStatus(App::Document::PartialDoc)) {
-        int res = getMainWindow()->confirmSave(getDocument(), getActiveView());
+        const char *docName = getDocument()->Label.getValue();
+        int res = getMainWindow()->confirmSave(docName, getActiveView());
         switch (res)
         {
         case MainWindow::ConfirmSaveResult::Cancel:
@@ -2266,14 +2267,11 @@ bool Document::canClose (bool checkModify, bool checkLink)
         case MainWindow::ConfirmSaveResult::Save:
             ok = save();
             if (!ok) {
-                const QString docName = QString::fromStdString(getDocument()->Label.getStrValue());
-                const QString text = (!docName.isEmpty()
-                                      ? QObject::tr("Failed to save document '%1'. Would you like to cancel the closure?").arg(docName)
-                                      : QObject::tr("Document saving failed. Would you like to cancel the closure?"));
                 int ret = QMessageBox::question(
                     getActiveView(),
-                    QObject::tr("Unable to save document"),
-                    text,
+                    QObject::tr("Document not saved"),
+                    QObject::tr("The document%1 could not be saved. Do you want to cancel closing it?")
+                    .arg(docName?(QStringLiteral(" ")+QString::fromUtf8(docName)):QString()),
                     QMessageBox::Discard | QMessageBox::Cancel,
                     QMessageBox::Discard);
                 if (ret == QMessageBox::Discard)

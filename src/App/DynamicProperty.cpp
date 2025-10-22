@@ -358,25 +358,25 @@ Property* DynamicProperty::restore(PropertyContainer& pc,
     short attribute = 0;
     bool readonly = false, hidden = false;
     const char *group = nullptr, *doc = nullptr, *attr = nullptr, *ro = nullptr, *hide = nullptr;
-    group = reader.getAttribute<const char*>("group");
+    group = reader.getAttribute("group");
     if (reader.hasAttribute("doc")) {
-        doc = reader.getAttribute<const char*>("doc");
+        doc = reader.getAttribute("doc");
     }
     if (reader.hasAttribute("attr")) {
-        attr = reader.getAttribute<const char*>("attr");
+        attr = reader.getAttribute("attr");
         if (attr) {
             std::istringstream str(attr);
             str >> attribute;
         }
     }
     if (reader.hasAttribute("ro")) {
-        ro = reader.getAttribute<const char*>("ro");
+        ro = reader.getAttribute("ro");
         if (ro) {
             readonly = (ro[0] - 48) != 0;
         }
     }
     if (reader.hasAttribute("hide")) {
-        hide = reader.getAttribute<const char*>("hide");
+        hide = reader.getAttribute("hide");
         if (hide) {
             hidden = (hide[0] - 48) != 0;
         }

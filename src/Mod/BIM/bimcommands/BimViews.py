@@ -52,7 +52,6 @@ class BIM_Views:
         from PySide import QtCore, QtGui
 
         vm = findWidget()
-        self.allItemsInTree = []
         bimviewsbutton = None
         mw = FreeCADGui.getMainWindow()
         st = mw.statusBar()
@@ -92,8 +91,7 @@ class BIM_Views:
                             ("Toggle", translate("BIM","Toggle on/off")),
                             ("Isolate", translate("BIM","Isolate")),
                             ("SaveView", translate("BIM","Save view position")),
-                            ("Rename", translate("BIM","Rename")),
-                            ("Activate", translate("BIM","Activate"))]:
+                            ("Rename", translate("BIM","Rename"))]:
                 action = QtGui.QAction(button[1])
                 self.dialog.menu.addAction(action)
                 setattr(self.dialog,"button"+button[0], action)
@@ -108,7 +106,6 @@ class BIM_Views:
             self.dialog.buttonRename.setIcon(
                 QtGui.QIcon(":/icons/accessories-text-editor.svg")
             )
-            self.dialog.buttonActivate.setIcon(QtGui.QIcon(":/icons/edit_OK.svg"))
 
             # set tooltips
             self.dialog.buttonAddLevel.setToolTip(translate("BIM","Creates a new level"))
@@ -118,7 +115,6 @@ class BIM_Views:
             self.dialog.buttonIsolate.setToolTip(translate("BIM","Turns all items off except the selected ones"))
             self.dialog.buttonSaveView.setToolTip(translate("BIM","Saves the current camera position to the selected items"))
             self.dialog.buttonRename.setToolTip(translate("BIM","Renames the selected item"))
-            self.dialog.buttonActivate.setToolTip(translate("BIM","Activates the selected item"))
 
             # connect signals
             self.dialog.buttonAddLevel.triggered.connect(self.addLevel)
@@ -128,7 +124,6 @@ class BIM_Views:
             self.dialog.buttonIsolate.triggered.connect(self.isolate)
             self.dialog.buttonSaveView.triggered.connect(self.saveView)
             self.dialog.buttonRename.triggered.connect(self.rename)
-            self.dialog.buttonActivate.triggered.connect(self.activate)
             self.dialog.tree.itemClicked.connect(self.select)
             self.dialog.tree.itemDoubleClicked.connect(show)
             self.dialog.viewtree.itemDoubleClicked.connect(show)
@@ -194,7 +189,6 @@ class BIM_Views:
         if vm and FreeCAD.ActiveDocument:
             if vm.isVisible() and (vm.tree.state() != vm.tree.State.EditingState):
                 vm.tree.clear()
-                self.allItemsInTree.clear()
                 treeViewItems = []  # QTreeWidgetItem to Display in tree
                 lvHold = []
                 soloProxyHold = []
@@ -312,13 +306,8 @@ class BIM_Views:
                     objActive = FreeCADGui.ActiveDocument.ActiveView.getActiveObject("Arch")
                 tparam = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/TreeView")
                 activeColor = tparam.GetUnsigned("TreeActiveColor",0)
-
-                # We reuse the variable later on in "Isolate", to not traverse the tree once
-                # again
-                self.allItemsInTree = getAllItemsInTree(vm.tree)
-                allItemsInTrees = self.allItemsInTree + getAllItemsInTree(vm.viewtree)
-
-                for item in allItemsInTrees:
+                allItemsInTree = getAllItemsInTree(vm.tree) + getAllItemsInTree(vm.viewtree)
+                for item in allItemsInTree:
                     if item.text(0) in objNameSelected:
                         item.setSelected(True)
                     if objActive and item.toolTip(0) == objActive.Name:
@@ -423,15 +412,6 @@ class BIM_Views:
                 if vm.tree.selectedItems():
                     item = vm.tree.selectedItems()[-1]
                     vm.tree.editItem(item, 0)
-    
-    def activate(self, item):
-        vm = findWidget()
-        if vm:
-            if vm.tree.selectedItems():
-                if vm.tree.selectedItems():
-                    item = vm.tree.selectedItems()[-1]
-                    obj = FreeCAD.ActiveDocument.getObject(item.toolTip(0))
-                    obj.ViewObject.Proxy.setWorkingPlane()
 
     def editObject(self, item, column):
         "renames or edit height of the actual object"
@@ -454,60 +434,19 @@ class BIM_Views:
                     obj.ViewObject.Visibility = not (obj.ViewObject.Visibility)
             FreeCAD.ActiveDocument.recompute()
 
-    def _isAncestor(self, ancestor_item, child_item):
-        current = child_item.parent()
-        while current is not None:
-            if current == ancestor_item:
-                return True
-            current = current.parent()
-        return False
-
     def isolate(self):
-        import Draft
-        """
-        Isolate the currently selected items in the tree view.
-
-        This function first makes all items in the tree visible to ensure a clean slate.
-        Then, it hides all items that are not currently selected by the user in the GUI tree view.
-        As a result, only the selected items remain visible in the 3D view, effectively isolating them.
-
-        Assumes that `self.allItemsInTree` is a list of all QTreeWidgetItems in the tree.
-        """
-
-        # Iterate through all of the items and show them beforehand if they were hidden
-        # so we can "reset" the tree state before the real processing
-        for item in self.allItemsInTree:
-            toolTip = item.toolTip(0)
-            obj = FreeCAD.ActiveDocument.getObject(toolTip)
-            if obj:
-                # We switch visibility to be sure we will show childs of other childs
-                # beforehand, as the Visibility may not be propagated.
-                obj.ViewObject.Visibility = False
-                obj.ViewObject.Visibility = True
+        "turns all items off except the selected ones"
 
         vm = findWidget()
         if vm:
-            selectedItems = vm.tree.selectedItems()
-            checkAncestors = False
-            # We can get a scenario where user has just selected only Building
-            # so we don't want to hide any of it's children, so just check if that's
-            # the case so we will know whether we should process items further or not
-            if len(selectedItems) == 1:
-                toolTip = selectedItems[0].toolTip(0)
-                obj = FreeCAD.ActiveDocument.getObject(toolTip)
-                t = Draft.getType(obj)
-                if obj and getattr(obj, "IfcType", "") == "Building":
-                    checkAncestors = True
-
-            for item in self.allItemsInTree:
-                toolTip = item.toolTip(0)
-                obj = FreeCAD.ActiveDocument.getObject(toolTip)
-                if obj:
-                    if item not in selectedItems and not (checkAncestors and self._isAncestor(selectedItems[0], item)):
+            onnames = [item.toolTip(0) for item in vm.tree.selectedItems()]
+            for i in range(vm.tree.topLevelItemCount()):
+                item = vm.tree.topLevelItem(i)
+                if item.toolTip(0) not in onnames:
+                    obj = FreeCAD.ActiveDocument.getObject(item.toolTip(0))
+                    if obj:
                         obj.ViewObject.Visibility = False
-                    else:
-                        obj.ViewObject.Visibility = True
-
+            FreeCAD.ActiveDocument.recompute()
 
     def saveView(self):
         "save the current camera angle to the selected item"
